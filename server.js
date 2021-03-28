@@ -5,7 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express(); // Creates a server application.
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT || 3000;
 
 
 // Allow access to our api from another domain
