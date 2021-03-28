@@ -47,7 +47,26 @@ function handleLocation(request, response) {
 
 app.get('/location', handlelWeather);
 
-function Weather ()
+function Forcast (forecast, time) {
+
+  this.forecast = forecast;
+  this.time = time;
+}
+
+function handlelWeather(request, response) {
+  let weatherJson= [];
+  let weatherData = require(`./data/weather.json`);
+  try{
+    for (let i = 0; i < weatherData.data.length; i++) {
+      let Value = new Forcast (weatherData.data[i].weather.description, weatherData.data[i].valid_date);
+      weatherJson.push(Value);
+    }
+    response.status(200).json(weatherJson);
+  } catch (error){
+    response.status(500).send('ERROR');
+
+  }
+}
 
 
 
