@@ -5,7 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express(); // Creates a server application.
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3500;
 
 
 // Allow access to our api from another domain
@@ -17,5 +17,39 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => console.log(' app listening on port 3000!'));
+
+//-------------------------------------------------------------------------------------
+
+// let  arrOflocations =[];
+require('dotenv').config();
+
+app.get('/location', handleLocation);
+
+function Locations (search_query, formatted_query, latitude, longitude) {
+  this.search_query = search_query;
+  this.formatted_query = formatted_query;
+  this.latitude = latitude;
+  this.longitude = longitude;
+  // arrOflocations.push(this);
+
+}
+
+
+function handleLocation(request, response) {
+  let city = request.query.city;
+  let locationsData = require(`./data/location.json`);
+  let locationObj ;
+  locationsData.forEach(value =>{
+    locationObj = new Locations(city,value.display_name, value.lat, value.lon);
+  });
+  response.status(200).json(locationObj);
+}
+
+app.get('/location', handlelWeather);
+
+function Weather ()
+
+
+
 
 
