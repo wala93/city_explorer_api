@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+// const { report } = require('node:process');
 
 require('dotenv').config();
 
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 app.get('/', (req, res) => {
+  res.status(200);
   res.send('basic server!');
 });
 
