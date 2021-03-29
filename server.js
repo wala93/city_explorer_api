@@ -76,5 +76,3 @@ function handlelWeather(request, response) {
 
 
 
-
-
