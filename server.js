@@ -5,6 +5,9 @@ const cors = require('cors');
 const app = express(); // Creates a server application.
 const PORT = process.env.PORT || 3002;
 
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const TRAIL_API_KEY = process.env.TRAIL_API_KEY;
+const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 
 // Allow access to our api from another domain
 app.use(cors());
@@ -51,28 +54,39 @@ function handleLocation(request, response) {
 
 app.get('/weather', handlelWeather);
 
-function Forcast (search_query,forecast, time) {
-  this.search_query = search_query;
-  this.forecast = forecast;
-  this.time = time;
+function Forcast (eljaw) {
+  this.search_query = eljaw.search_query;
+  this.forecast = eljaw.forecast;
+  this.time = eljaw.time;
 }
 
 
 
 function handlelWeather(request, response) {
   let weatherJson= [];
+
   let weatherData = require('./data/ weather.json');
-  try{
-    for (let i = 0; i < weatherData.data.length; i++) {
-      let Value = new Forcast (weatherData.data[i].weather.description, weatherData.data[i].valid_date);
-      weatherJson.push(Value);
-    }
+  
+    // for (let i = 0; i < weatherData.data.length; i++) {
+    //   let Value = new Forcast (weatherData.data[i].weather.description, weatherData.data[i].valid_date);
+    //   weatherJson.push(Value);
+    // }
+    superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}`)
+    .then(dataX => {
+
+      weatherArr = dataX.body.data.map((rain) => {
+        return new Weather(rain);
+      });
     response.status(200).json(weatherJson);
-  } catch (error){
+ 
+  catch (error){
     response.status(500).send('ERROR');
 
   }
+  });
+ 
 }
 
-//why it doesnt apper pull request when i push my work this comment just to make it  changes in file 
+
+//to compare latest changes
 
