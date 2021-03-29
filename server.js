@@ -2,10 +2,10 @@ const express = require('express');
 const cors = require('cors');
 // const { report } = require('node:process');
 
-require('dotenv').config();
+ require('dotenv').config();
 
 const app = express(); // Creates a server application.
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 
 // Allow access to our api from another domain
@@ -39,16 +39,23 @@ function handleLocation(request, response) {
   let city = request.query.city;
   let locationsData = require(`./data/location.json`);
   let locationObj ;
-  locationsData.forEach(value =>{
-    locationObj = new Locations(city,value.display_name, value.lat, value.lon);
-  });
-  response.status(200).json(locationObj);
+  try {
+    locationsData.forEach(value =>{
+      locationObj = new Locations(city,value.display_name, value.lat, value.lon);
+    });
+    response.status(200).json(locationObj);
+  }
+  catch (error){
+    response.status(500).send('ERROR');
+
+  }
 }
+
 
 app.get('/location', handlelWeather);
 
-function Forcast (forecast, time) {
-
+function Forcast (search_query,forecast, time) {
+  this.search_query = search_query;
   this.forecast = forecast;
   this.time = time;
 }
