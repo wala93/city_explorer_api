@@ -66,26 +66,22 @@ function handlelWeather(request, response) {
   let weatherJson= [];
 
   let weatherData = require('./data/ weather.json');
-  
-    // for (let i = 0; i < weatherData.data.length; i++) {
-    //   let Value = new Forcast (weatherData.data[i].weather.description, weatherData.data[i].valid_date);
-    //   weatherJson.push(Value);
-    // }
-    superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}`)
+
+
+  superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}`)
     .then(dataX => {
 
       weatherArr = dataX.body.data.map((rain) => {
         return new Weather(rain);
       });
-    response.status(200).json(weatherJson);
- 
-  catch (error){
-    response.status(500).send('ERROR');
+      response.status(200).json(weatherJson);
 
-  }
-  });
- 
+
+    }).
+    catch( console.error);
+
 }
+
 
 
 //to compare latest changes
