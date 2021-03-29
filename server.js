@@ -20,8 +20,7 @@ app.listen(PORT, () => console.log(' app listening on port 3000!'));
 
 //-------------------------------------------------------------------------------------
 
-// let  arrOflocations =[];
-// require('dotenv').config();
+
 
 app.get('/location', handleLocation);
 
@@ -30,7 +29,7 @@ function Locations (search_query, formatted_query, latitude, longitude) {
   this.formatted_query = formatted_query;
   this.latitude = latitude;
   this.longitude = longitude;
-  // arrOflocations.push(this);
+
 
 }
 
