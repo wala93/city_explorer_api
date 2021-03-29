@@ -1,8 +1,6 @@
 const express = require('express');
-const cors = require('cors');
-// const { report } = require('node:process');
-
 require('dotenv').config();
+const cors = require('cors');
 
 const app = express(); // Creates a server application.
 const PORT = process.env.PORT || 3002;
@@ -18,7 +16,7 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => console.log(' app listening on port 3000!'));
 
-//-------------------------------------------------------------------------------------
+//----------------------------------------------------------------------
 
 
 
@@ -59,6 +57,8 @@ function Forcast (search_query,forecast, time) {
   this.time = time;
 }
 
+
+
 function handlelWeather(request, response) {
   let weatherJson= [];
   let weatherData = require('./data/ weather.json');
@@ -73,6 +73,4 @@ function handlelWeather(request, response) {
 
   }
 }
-
-
 
