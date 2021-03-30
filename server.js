@@ -7,7 +7,8 @@ const PORT = process.env.PORT || 3002;
 const superagent = require('superagent');
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
-
+const pg = require('pg');
+const client = new pg.Client(process.env.DATABASE_URL);
 // Allow access to our api from another domain
 app.use(cors());
 
@@ -50,6 +51,13 @@ function handleLocation(request, response) {
   // }
 
   let city = request.query.city;
+  const SQL = 'SELECT * FROM locations WHERE search_query = $1';
+  let value=[city];
+  client
+    .query(SQL, value)
+    .then((result) =>
+      response.status(200).json(result.rows[0])
+    );
   const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
   console.log('inside location');
   superagent.get(url).then( locationData => {
@@ -80,7 +88,6 @@ function handlelWeather(request, response) {
 
   // let weatherData = require('./data/ weather.json');
   let search_query = request.query.search_query;
-console.log(`inside weather`);
   superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}&format=json`)
     .then(weatherDta => {
 
@@ -91,14 +98,22 @@ console.log(`inside weather`);
       response.status(200).json(weatherJson);
 
 
-    }).
-    catch((error) =>{
-      response.send('Sorry, something went wrong');
-    });
+    }) .catch((error) => errorHandler(error, request, response));
 
+  console.error();
 }
 
 
+// catch(
+// //   (error) =>{
+// // //   response.send('Sorry, something went wrong');
+// });
+
+
+
+function errorHandler(error, request, response) {
+  response.status(500).send(error);
+}
 
 //to make sure it pushed to git hub
 
