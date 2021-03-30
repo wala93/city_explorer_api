@@ -1,5 +1,5 @@
-const express = require('express');
 require('dotenv').config();
+const express = require('express');
 const cors = require('cors');
 
 const app = express(); // Creates a server application.
@@ -66,10 +66,10 @@ function handleLocation(request, response) {
 
 app.get('/weather', handlelWeather);
 
-function Forcast (eljaw) {
-  this.search_query = eljaw.search_query;
-  this.forecast = eljaw.forecast;
-  this.time = eljaw.time;
+function Forcast (dayweather) {
+  this.search_query = dayweather.search_query;
+  this.forecast = dayweather.forecast;
+  this.time = dayweather.time;
 }
 
 
@@ -83,14 +83,16 @@ function handlelWeather(request, response) {
   superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}`)
     .then(weatherDta => {
 
-      weatherJson = weatherDta.body.data.map((rain) => {
-        return new Forcast(rain);
+      weatherJson = weatherDta.body.data.map((dayweather) => {
+        return new Forcast(dayweather);
       });
       response.status(200).json(weatherJson);
 
 
     }).
-    catch( console.error);
+    catch((error) =>{
+      response.send('Sorry, something went wrong');
+    });
 
 }
 
