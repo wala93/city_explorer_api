@@ -52,9 +52,9 @@ function handleLocation(request, response) {
 
   let city = request.query.city;
   const SQL = 'SELECT * FROM locations WHERE search_query = $1';
-  let value=[city];
+  let sqlArr=[city];
   client
-    .query(SQL, value)
+    .query(SQL, sqlArr)
     .then((result) =>
       response.status(200).json(result.rows[0])
     );
