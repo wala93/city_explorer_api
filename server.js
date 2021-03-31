@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3002;
 const superagent = require('superagent');
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
-
+const PARKS_API_KEY=process.env.PARKS_API_KEY;
 // Allow access to our api from another domain
 app.use(cors());
 
@@ -105,9 +105,31 @@ function handlelWeather(request, response) {
 }
 
 
+app.get('/parks',handleParks);
 
-//to make sure it pushed to git hub
+function handleParks(request,respons){
+  const city=request.query.city;
+  const url=`https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
+
+  const arrOfParks=[];
+  superagent.get(url).then(parksData=> {
+
+    parksData.data.map(park=>{
+      return new Parks(park);
+    });
+    console.log(arrOfParks);
+    respons.send(arrOfParks);
+  }).catch((error) =>{
+    respons.send('Sorry, something went wrong');
+  });
+
+}
 
 
-//push again
-//install ggogl-map
+function Parks(data){
+  this.name=data.name;
+  this.address=data.address;
+  this.fee =data.fees;
+  this.description=data.description;
+  this.url=data.url;
+}
