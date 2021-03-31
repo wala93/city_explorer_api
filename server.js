@@ -7,8 +7,12 @@ const PORT = process.env.PORT || 3002;
 const superagent = require('superagent');
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+
 const pg = require('pg');
 const client = new pg.Client(process.env.DATABASE_URL);
+
+const PARKS_API_KEY=process.env.PARKS_API_KEY;
+
 // Allow access to our api from another domain
 app.use(cors());
 
@@ -51,6 +55,7 @@ function handleLocation(request, response) {
   // }
 
   let city = request.query.city;
+
   const SQL = 'SELECT * FROM locations WHERE search_query = $1';
   let sqlArr=[city];
   client
@@ -59,14 +64,17 @@ function handleLocation(request, response) {
       response.status(200).json(result.rows[0])
     );
   const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
+
   console.log('inside location');
   superagent.get(url).then( locationData => {
 
     const geoApiData = locationData.body[0];
     console.log(geoApiData);
     let location = new Locations(city, geoApiData.display_name, geoApiData.lat, geoApiData.lon);
-    response.status(200).json(location);
+    response.status(200).send(location);
 
+  }).catch((error) =>{
+    response.send('Sorry, something went wrong');
   });
 
 
@@ -76,9 +84,9 @@ function handleLocation(request, response) {
 app.get('/weather', handlelWeather);
 
 function Forcast (dayweather) {
-  this.search_query = dayweather.search_query;
-  this.forecast = dayweather.forecast;
-  this.time = dayweather.time;
+  // this.search_query = dayweather.search_query;
+  this.forecast = dayweather.weather.description;
+  this.time = dayweather.datetime;
 }
 
 
@@ -88,35 +96,60 @@ function handlelWeather(request, response) {
 
   // let weatherData = require('./data/ weather.json');
   let search_query = request.query.search_query;
+
+  console.log(`inside weather`);
+
   superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}&format=json`)
     .then(weatherDta => {
+      console.log(search_query);
+      weatherJson = weatherDta.body.data.map((dayweather) => {
+        // weatherJson.push(new Forcast(dayweather));
+        return new Forcast (dayweather);
 
-      weatherJson = weatherDta.body[0].data.map((dayweather) => {
-        return new Forcast(dayweather);
+        // return weatherJson;
       });
       console.log(weatherDta);
-      response.status(200).json(weatherJson);
+      response.status(200).send(weatherJson);
+      // console.log(weatherDta.text);
+      // response.send(weatherDta.body.data);
 
 
-    }) .catch((error) => errorHandler(error, request, response));
+    }).catch((error) =>{
+      response.send('Sorry, something went wrong');
+    });
+
 
   console.error();
 }
 
 
-// catch(
-// //   (error) =>{
-// // //   response.send('Sorry, something went wrong');
-// });
+
+app.get('/parks',handleParks);
+
+function handleParks(request,respons){
+  const city=request.query.city;
+  const url=`https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
 
 
+  const arrOfParks=[];
+  superagent.get(url).then(parksData=> {
 
-function errorHandler(error, request, response) {
-  response.status(500).send(error);
+    parksData.data.map(park=>{
+      return new Parks(park);
+    });
+    console.log(arrOfParks);
+    respons.send(arrOfParks);
+  }).catch((error) =>{
+    respons.send('Sorry, something went wrong');
+  });
+
 }
 
-//to make sure it pushed to git hub
 
-
-//push again
-//install ggogl-map
+function Parks(data){
+  this.name=data.name;
+  this.address=data.address;
+  this.fee =data.fees;
+  this.description=data.description;
+  this.url=data.url;
+}
