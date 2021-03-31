@@ -7,7 +7,12 @@ const PORT = process.env.PORT || 3002;
 const superagent = require('superagent');
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+
+const pg = require('pg');
+const client = new pg.Client(process.env.DATABASE_URL);
+
 const PARKS_API_KEY=process.env.PARKS_API_KEY;
+
 // Allow access to our api from another domain
 app.use(cors());
 
@@ -50,8 +55,16 @@ function handleLocation(request, response) {
   // }
 
   let city = request.query.city;
-  // const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
-  const url =`https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
+
+  const SQL = 'SELECT * FROM locations WHERE search_query = $1';
+  let sqlArr=[city];
+  client
+    .query(SQL, sqlArr)
+    .then((result) =>
+      response.status(200).json(result.rows[0])
+    );
+  const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
+
   console.log('inside location');
   superagent.get(url).then( locationData => {
 
@@ -83,7 +96,9 @@ function handlelWeather(request, response) {
 
   // let weatherData = require('./data/ weather.json');
   let search_query = request.query.search_query;
+
   console.log(`inside weather`);
+
   superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${search_query}&key=${WEATHER_API_KEY}&format=json`)
     .then(weatherDta => {
       console.log(search_query);
@@ -98,11 +113,15 @@ function handlelWeather(request, response) {
       // console.log(weatherDta.text);
       // response.send(weatherDta.body.data);
 
+
     }).catch((error) =>{
       response.send('Sorry, something went wrong');
     });
 
+
+  console.error();
 }
+
 
 
 app.get('/parks',handleParks);
@@ -110,6 +129,7 @@ app.get('/parks',handleParks);
 function handleParks(request,respons){
   const city=request.query.city;
   const url=`https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
+
 
   const arrOfParks=[];
   superagent.get(url).then(parksData=> {
