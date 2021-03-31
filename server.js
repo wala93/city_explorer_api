@@ -13,6 +13,7 @@ const client = new pg.Client(process.env.DATABASE_URL);
 
 const PARKS_API_KEY=process.env.PARKS_API_KEY;
 
+
 // Allow access to our api from another domain
 app.use(cors());
 
@@ -40,19 +41,6 @@ function Locations (search_query, formatted_query, latitude, longitude) {
 
 
 function handleLocation(request, response) {
-  // let city = request.query.city;
-  // let locationsData = require(`./data/location.json`);
-  // let locationObj ;
-  // try {
-  //   locationsData.forEach(value =>{
-  //     locationObj = new Locations(city,value.display_name, value.lat, value.lon);
-  //   });
-  //   response.status(200).json(locationObj);
-  // }
-  // catch (error){
-  //   response.status(500).send('ERROR');
-
-  // }
 
   let city = request.query.city;
 
