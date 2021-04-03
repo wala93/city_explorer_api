@@ -163,14 +163,17 @@ function handleParks(request, respons) {
 
 function handlelMovies(request, response) {
 
-  console.log(`inside movies`);
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${MOVIE_API_KEY}&query=${request.query.city}`;
   const moviesData = [];
+  console.log(`inside movies`);
   superagent.get(url).then(resData => {
     let data = resData.body.results.map(movie => {
       moviesData.push(new Movie(movie));
+
       return moviesData;
     });
+
+
     response.send(data);
   }).catch((error) => {
     response.send('Sorry, something went wrong');
