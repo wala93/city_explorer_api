@@ -113,12 +113,13 @@ function handleParks(request,respons){
 
   const arrOfParks=[];
   superagent.get(url).then(parksData=> {
-
-    parksData.data.map(park=>{
-      return new Parks(park);
+    let data;
+    data = parksData.data.map(park=>{
+      arrOfParks.push( new Parks(park));
+      return arrOfParks;
     });
     console.log(arrOfParks);
-    respons.send(arrOfParks);
+    respons.send(data);
   }).catch((error) =>{
     respons.send('Sorry, something went wrong');
   });
