@@ -133,15 +133,17 @@ function handleParks(request, respons) {
   const url = `https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
 
 
-  const arrOfParks = [];
-  superagent.get(url).then(parksData => {
-
-    parksData.data.map(park => {
-      return new Parks(park);
+  const arrOfParks=[];
+  superagent.get(url).then(parksData=> {
+    let data;
+    data = parksData.data.map(park=>{
+      arrOfParks.push( new Parks(park));
+      return arrOfParks;
     });
     console.log(arrOfParks);
-    respons.send(arrOfParks);
-  }).catch((error) => {
+    respons.send(data);
+  }).catch((error) =>{
+
     respons.send('Sorry, something went wrong');
   });
 
