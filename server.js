@@ -60,7 +60,7 @@ function handleLocation(request, response) {
   client
     .query(SQL, sqlArr)
     .then((result) => {
-      if (result.rowCount) {
+      if (result.rows.length>0) {
         console.log('from DB', result.rows);
         response.status(200).json(result.rows[0]);
       }
@@ -75,7 +75,7 @@ function handleLocation(request, response) {
           client.query(sqlQuery, safeValues)
             .then((result) => {
               console.log('from API');
-              response.status(200).send(location);
+              response.status(200).send('im inside location');
             });
         });
       }
