@@ -10,7 +10,7 @@ const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const MOVIE_API_KEY = process.env.MOVIE_API_KEY;
 const pg = require('pg');
 const client = new pg.Client(process.env.DATABASE_URL);
-
+const YELP_API_KEY=process.env.YELP_API_KEY;
 const PARKS_API_KEY = process.env.PARKS_API_KEY;
 
 
@@ -31,6 +31,9 @@ app.get('/weather', handlelWeather);
 app.get('/parks', handleParks);
 app.get('/movies', handlelMovies);
 app.get('/yelp', handleRestu);
+const arrOfParks = [];
+const moviesData = [];
+let arrOfYelp = [];
 
 
 
@@ -46,22 +49,24 @@ function Forcast(dayweather) {
   this.time = dayweather.datetime;
 }
 
-function Parks(data) {
-  this.name = data.name;
-  this.address = data.address;
-  this.fee = data.fees;
-  this.description = data.description;
-  this.url = data.url;
+function Parks(object) {
+  this.name = object.fullName;
+  this.address = `${object.addresses[0].line1} ${object.addresses[0].city}`;
+  this.fee = object.entranceFees[0].cost;
+  this.description = object.description;
+  this.url = object.url;
+  arrOfParks.push(this);
 }
 
 function Movie(data) {
   this.title = data.title;
   this.overview = data.overview;
-  this.average_votes = data.average_votes;
-  this.total_votes = data.total_votes;
-  this.image_url = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+  this.average_votes = data.vote_average;
+  this.total_votes = data.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
   this.popularity = data.popularity;
-  this.released_on = data.released_on;
+  this.released_on = data.release_date;
+  moviesData.push(this);
 }
 
 function Yelp(data) {
@@ -70,6 +75,7 @@ function Yelp(data) {
   this.price = data.price;
   this.rating = data.rating;
   this.url = data.url;
+  arrOfYelp.push(this);
 }
 
 
@@ -77,13 +83,13 @@ function handleLocation(request, response) {
 
   let city = request.query.city;
 
-  const SQL = 'SELECT * FROM locations WHERE search_query = $1';
-  let sqlArr = [city];
-  client
-    .query(SQL, sqlArr)
-    .then((result) =>
-      response.status(200).json(result.rows[0])
-    );
+  // const SQL = 'SELECT * FROM locations WHERE search_query = $1';
+  // let sqlArr = [city];
+  // client
+  //   .query(SQL, sqlArr)
+  //   .then((result) =>
+  //     response.status(200).json(result.rows[0])
+  //   );
   const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
 
   console.log('inside location');
@@ -137,19 +143,18 @@ function handlelWeather(request, response) {
 
 function handleParks(request, respons) {
   const city = request.query.city;
-  const url = `https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
+  const url = `https://developer.nps.gov/api/v1/parks?api_key=${PARKS_API_KEY}&q=${request.query.search_query}`;
 
   console.log(`inside parks`);
-  const arrOfParks = [];
   superagent.get(url).then(parksData => {
     let data;
-    data = parksData.data.map(park => {
-      arrOfParks.push(new Parks(park));
+    data = parksData.body.data.map(park => {
+      new Parks(park);
       return arrOfParks;
 
     });
     console.log(arrOfParks);
-    respons.send(data);
+    respons.send(arrOfParks);
   }).catch((error) => {
     respons.send('Sorry, something went wrong');
   });
@@ -163,18 +168,15 @@ function handleParks(request, respons) {
 
 function handlelMovies(request, response) {
 
-  const url = `https://api.themoviedb.org/3/search/movie?api_key=${MOVIE_API_KEY}&query=${request.query.city}`;
-  const moviesData = [];
+  const url = `http://api.themoviedb.org/3/movie/top_rated?api_key=${MOVIE_API_KEY}&query=${request.query.city}`;
   console.log(`inside movies`);
   superagent.get(url).then(resData => {
     let data = resData.body.results.map(movie => {
-      moviesData.push(new Movie(movie));
-
-      return moviesData;
+      new Movie(movie);
     });
 
 
-    response.send(data);
+    response.send(moviesData);
   }).catch((error) => {
     response.send('Sorry, something went wrong');
 
@@ -186,21 +188,21 @@ function handlelMovies(request, response) {
 
 
 function handleRestu(request, response) {
+  let page=request.query.page;
 
   const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${request.query.latitude}&longitude=${request.query.longitude}&limit=20`;
 
   console.log(`inside yelp`);
-  let arrOfRestu = [];
-  superagent.get(url).then(apiData=> {
-    let data=apiData.body.businesses.map(element=>{
-      arrOfRestu.push( new Yelp(element));
-      return arrOfRestu;
+  superagent.get(url)
+    .set('Authorization', `Bearer ${YELP_API_KEY}`)
+    .then(apiData => {
+      let data = apiData.body.businesses.map(element => {
+        new Yelp(element);
+      });
+      response.send(arrOfYelp.slice((page-1)*5,page*5));
+    }).catch((error) => {
+      response.send('Sorry, something went wrong');
 
     });
-    response.send(data);
-  }).catch((error)=>{
-    response.send('Sorry, something went wrong');
-
-  });
 }
 
