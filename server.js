@@ -1,17 +1,18 @@
+'use strict';
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const superagent = require('superagent');const pg = require('pg');
 
 const app = express(); // Creates a server application.
 const PORT = process.env.PORT || 3002;
-const superagent = require('superagent');
+const DATABASE_URL = process.env.DATABASE_URL ;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const MOVIE_API_KEY = process.env.MOVIE_API_KEY;
-const pg = require('pg');
-const client = new pg.Client(process.env.DATABASE_URL);
 const YELP_API_KEY=process.env.YELP_API_KEY;
 const PARKS_API_KEY = process.env.PARKS_API_KEY;
+const client = new pg.Client(DATABASE_URL);
 
 
 // Allow access to our api from another domain
@@ -31,10 +32,16 @@ app.get('/weather', handlelWeather);
 app.get('/parks', handleParks);
 app.get('/movies', handlelMovies);
 app.get('/yelp', handleRestu);
+app.get('*', notFound);
 const arrOfParks = [];
 const moviesData = [];
 let arrOfYelp = [];
 
+
+function notFound(req, res){
+  res.status(404).send('Not Found');
+
+}
 
 
 function Locations(search_query, formatted_query, latitude, longitude) {
@@ -83,13 +90,45 @@ function handleLocation(request, response) {
 
   let city = request.query.city;
 
-  // const SQL = 'SELECT * FROM locations WHERE search_query = $1';
-  // let sqlArr = [city];
-  // client
-  //   .query(SQL, sqlArr)
-  //   .then((result) =>
-  //     response.status(200).json(result.rows[0])
-  //   );
+
+
+
+  const findCitySql = 'SELECT * FROM city WHERE search_query = $1;';
+  // const sqlArray = [city];
+
+  // const url = `https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&format=json&q=${city}&limit=1`;
+  // const quryParams = {
+  //     key : GEOCODE_API_KEY,
+  //     format : 'json',
+  //     q : city,
+  //     limit : 1
+  // }
+  // clint.query(findCitySql , sqlArray)
+  // .then((dataFromDB)=>{
+  //     if(dataFromDB.rowCount === 0){
+  //         superagent.get(url , quryParams).then(dataFromAPI =>{
+  //         console.log('from API');
+  //          const data = dataFromAPI.body[0];
+
+  //          const city_location = new CityLocation (city,data.display_name, data.lat, data.lon);
+  //          const insertCitySQL = 'INSERT INTO city (search_query , formatted_query, latitude, longitude) VALUES ($1 , $2 , $3, $4)'
+  //          clint.query(insertCitySQL , [city,data.display_name, data.lat, data.lon])
+  //          res.send(city_location);
+
+  //         });
+  //     }
+  //     else{
+  //         console.log('from Dabtbase')
+  //     const data = dataFromDB.rows[0];
+  //     const city_location = new CityLocation (city,data.formatted_query, data.latitude, data.longitude);
+  //     res.send(city_location);
+
+  //     }
+  // }).catch(internalserverError(res));
+
+
+
+
   const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json`;
 
   console.log('inside location');
