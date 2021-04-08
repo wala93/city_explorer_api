@@ -2,8 +2,8 @@
 DROP TABLE IF EXISTS locations;
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
-    location_name VARCHAR (255),
-    formated_query VARCHAR (255),
-    location_lon VARCHAR (255),
-    location_lat VARCHAR (255)
+    search_query VARCHAR (255),
+    formatted_query VARCHAR (255),
+    latitude VARCHAR (255),
+    longitude VARCHAR (255)
 );

@@ -12,14 +12,10 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const PARKS_API_KEY = process.env.PARKS_API_KEY;
 
-const { query } = require('express');
+// const { query } = require('express');
 const DATABASE_URL = process.env.DATABASE_URL;
-const client = new pg.Client({
-  connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+console.log(DATABASE_URL);
+const client = new pg.Client(DATABASE_URL);
 
 // Allow access to our api from another domain
 app.use(cors());
@@ -28,14 +24,14 @@ app.get('/', (req, res) => {
   res.status(200);
   res.send('basic server!');
 });
+app.get('/location', handleLocation);
 
-app.listen(PORT, () => console.log(` app listening on port ${PORT}!`));
+client.connect().then(() => app.listen(PORT, () => console.log(` app listening on port ${PORT}!`)));
 
 //----------------------------------------------------------------------
 
 
 
-app.get('/location', handleLocation);
 
 function Locations(search_query, formatted_query, latitude, longitude) {
   this.search_query = search_query;
@@ -48,38 +44,51 @@ function Locations(search_query, formatted_query, latitude, longitude) {
 
 
 function handleLocation(request, response) {
-
-
   console.log('inside location');
   let city = request.query.city;
-  const url = `https://eu1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${city}&format=json&limit=1`;
+  const findCitySql = 'SELECT * FROM locations WHERE search_query = $1;';
+  const sqlArray = [city];
 
-  let sqlArr = [city];
-  const SQL = 'SELECT * FROM locations WHERE search_query = $1';
+  const url = `https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&format=json&q=${city}&limit=1`;
+  const quryParams = {
+    key: GEOCODE_API_KEY,
+    format: 'json',
+    q: city,
+    limit: 1
+  };
+  client.query(findCitySql, sqlArray)
+    .then((dataFromDB) => {
+      if (dataFromDB.rowCount === 0) {
 
-  client
-    .query(SQL, sqlArr)
-    .then((result) => {
-      if (result.rows.length>0) {
-        console.log('from DB', result.rows);
-        response.status(200).json(result.rows[0]);
-      }
+        superagent.get(url, quryParams).then(dataFromAPI => {
+          console.log('from API', dataFromAPI);
+          const data = dataFromAPI.body[0];
 
-      else {
-        superagent.get(url).then(locationData => {
+          const cityLocation = new Locations(city, data.display_name, data.lat, data.lon);
+          const insertCitySQL = 'INSERT INTO locations (search_query , formatted_query, latitude, longitude) VALUES ($1 , $2 , $3, $4)';
+          console.log('insid if ');
+          client.query(insertCitySQL, [city, data.display_name, data.lat, data.lon]);
+          response.send(cityLocation);
 
-          const geoApiData = locationData.body[0];
-          const location = new Locations(city, geoApiData.display_name, geoApiData.lat, geoApiData.lon);
-          const safeValues = [city, locationData.body[0].display_name, locationData.body[0].lat, locationData.body[0].lon];
-          const sqlQuery = `INSERT INTO locations(search_query, formatted_query, latitude, longitude) VALUES ($1,$2,$3,$4)`;
-          client.query(sqlQuery, safeValues)
-            .then((result) => {
-              console.log('from API');
-              response.status(200).send('im inside location');
-            });
         });
       }
+      else {
+        console.log('from Dabtbase');
+        const data = dataFromDB.rows[0];
+        const cityLocation = new Locations(city, data.formatted_query, data.latitude, data.longitude);
+        console.log('inside else');
+        response.send(cityLocation);
+
+
+      }
+    }).catch((error) => {
+      console.log(error);
+      response.send('Sorry, something went wrong');
     });
+
+
+  //_____________________________________________________________________________________________
+
 }
 
 
@@ -136,8 +145,8 @@ function handleParks(request, respons) {
   const arrOfParks = [];
   superagent.get(url).then(parksData => {
     let data;
-    data= parksData.data.map(park => {
-      arrOfParks.push( new Parks(park));
+    data = parksData.data.map(park => {
+      arrOfParks.push(new Parks(park));
 
       return arrOfParks;
     });
