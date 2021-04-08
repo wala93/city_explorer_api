@@ -139,30 +139,31 @@ app.get('/parks', handleParks);
 
 function handleParks(request, respons) {
   const city = request.query.city;
-  const url = `https://developer.nps.gov/api/v1/parks?parkCode=${city}&api_key=${PARKS_API_KEY}`;
+  const url = `https://developer.nps.gov/api/v1/parks?api_key=${PARKS_API_KEY}&q=${request.query.search_query}`;
 
-
-  const arrOfParks = [];
+  console.log(`inside parks`);
   superagent.get(url).then(parksData => {
     let data;
-    data = parksData.data.map(park => {
-      arrOfParks.push(new Parks(park));
-
+    data = parksData.body.data.map(park => {
+      new Parks(park);
       return arrOfParks;
+
     });
     console.log(arrOfParks);
-    respons.send(data);
+    respons.send(arrOfParks);
   }).catch((error) => {
     respons.send('Sorry, something went wrong');
   });
 
 }
 
+const arrOfParks = [];
 
-function Parks(data) {
-  this.name = data.name;
-  this.address = data.address;
-  this.fee = data.fees;
-  this.description = data.description;
-  this.url = data.url;
+function Parks(object) {
+  this.name = object.fullName;
+  this.address = `${object.addresses[0].line1} ${object.addresses[0].city}`;
+  this.fee = object.entranceFees[0].cost;
+  this.description = object.description;
+  this.url = object.url;
+  arrOfParks.push(this);
 }
