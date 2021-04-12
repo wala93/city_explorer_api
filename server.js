@@ -75,9 +75,10 @@ function handleLocation(request, response) {
       else {
         console.log('from Dabtbase');
         const data = dataFromDB.rows[0];
-        const cityLocation = new Locations(city, data.formatted_query, data.latitude, data.longitude);
-        console.log('inside else');
-        response.send(cityLocation);
+        console.log(data);
+        // const cityLocation = new Locations(city, data.formatted_query, data.latitude, data.longitude);
+        // console.log('inside else');
+        response.send(data);
 
 
       }
